@@ -11,3 +11,4 @@ This class will do the following methods:
 	
 	- Create a new case
 	- Update a case
+	- Retrive jql issue queries.

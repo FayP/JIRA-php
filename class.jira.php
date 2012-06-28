@@ -20,8 +20,19 @@ class Jira {
 		$this->request->execute();  
 		echo '<pre>' . print_r($this->request, true) . '</pre>';
 	}
-	public function resolveIssue($host, $issueKey, $callback = null){
-
+	public function queryIssue($query){
+		
+		function createPairs($obj){
+			$str = "";
+			foreach ($obj as $key => $value) {
+    			$str .= "$key=$value&";
+			}
+			return rtrim($str, '&');
+		}
+		$qs = createPairs($query);
+		$this->request->OpenConnect('https://'.$this->host.'/rest/api/latest/search?jql='.$qs);
+		$this->request->execute();  
+		echo '<pre>' . print_r($this->request, true) . '</pre>';
 	}
 	
 }

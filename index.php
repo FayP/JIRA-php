@@ -17,9 +17,15 @@ $data ->fields->issuetype->name='QA Check';
 $summary->set = 'update to TTP-20, through update method';
 $update->update->summary= array($summary);
 
+$query->assignee = 'faypickering';
+$query->project = 'USSF';
+
 //$newcase = new Jira($config);
 //$newcase->createIssue($data);
 
-$updateCase = new Jira($config);
-$updateCase->updateIssue($update, $project.'-18');
+//$updateCase = new Jira($config);
+//$updateCase->updateIssue($update, $project.'-18');
+
+$queryIssue = new Jira($config);
+$queryIssue->queryIssue($query);
 ?>
