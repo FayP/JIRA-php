@@ -2,11 +2,11 @@
 ini_set('display_errors', 'On');
 require_once('class.jira.php');
 
-$config->username= "apiuser";
-$config->password= "api123";
+$config->username= "USERNAME";
+$config->password= "PASSWORD";
 $config->port= 443;
-$config->host= "flashtalkingus.atlassian.net";
-$project = "TTP";
+$config->host= "DOMAIN";
+$project = "KEY";
 
 
 $data ->fields->project->key='TTP';
