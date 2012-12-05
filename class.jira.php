@@ -13,8 +13,12 @@ class Jira {
 		$this->request->openConnect('https://'.$this->host.'/rest/api/latest/issue/', 'POST', $json);
 		$this->request->execute();  
 		echo '<pre>' . print_r($this->request, true) . '</pre>';
-
 	}
+    public function addAttachment($filename, $issueKey){
+		$this->request->openConnect('https://'.$this->host.'/rest/api/latest/issue/'.$issueKey.'/attachments', 'POST', null, $filename);
+		$this->request->execute();  
+		echo '<pre>' . print_r($this->request, true) . '</pre>';
+    }
 	public function updateIssue($json, $issueKey){
 		$this->request->openConnect('https://'.$this->host.'/rest/api/latest/issue/'.$issueKey, 'PUT', $json);
 		$this->request->execute();  
