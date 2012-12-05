@@ -10,7 +10,7 @@ class RestRequest {
     protected $responseBody; 
     protected $responseInfo;  
   
-    public function openConnect ($url = null, $verb = 'GET', $requestBody = null){  
+    public function openConnect ($url = null, $verb = 'GET', $requestBody = null, $filename = null){  
         $this->url               = $url;  
         $this->verb              = $verb;  
         $this->requestBody       = $requestBody;  
@@ -18,11 +18,11 @@ class RestRequest {
         $this->acceptType        = 'application/json';
         $this->responseBody      = null;  
         $this->responseInfo      = null;  
+        $this->filename          = $filename;
+        $this->contentType       = 'Content-Type: application/json';
   
-        if ($this->requestBody !== null)  
-        {  
+        if ($this->requestBody !== null || $this->filename !== null)
             $this->buildPostBody();  
-        }  
     }  
   
     public function flush (){  
@@ -64,10 +64,26 @@ class RestRequest {
     }
   
     public function buildPostBody ($data = null){  
-  		$data = ($data !== null) ? $data : $this->requestBody; 
-  
-    	$data = json_encode($data);
-    	$this->requestBody = $data;  
+        if ($data == null) {
+            if ($this->filename !== null) {
+                $fileContents = file_get_contents($this->filename);
+                $boundary = "----------------------------".substr(md5(rand(0,32000)), 0, 12);
+
+                $data = "--".$boundary."\r\n";
+                $data .= "Content-Disposition: form-data; name=\"file\"; filename=\"".basename($this->filename)."\"\r\n";
+                $data .= "Content-Type: ".mime_content_type($this->filename)."\r\n";
+                $data .= "\r\n";
+                $data .= $fileContents."\r\n";
+                $data .= "--".$boundary."--";
+
+                $this->requestBody = $data;
+                $this->contentType = 'Content-Type: multipart/form-data; boundary='.$boundary;
+            }
+            else 
+                $this->requestBody = json_encode($this->requestBody);
+        }
+        else
+            $this->requestBody = json_encode($data);
     }  
   
     protected function executeGet ($ch){         
@@ -75,7 +91,6 @@ class RestRequest {
     }  
   
     protected function executePost ($ch){
-
     	curl_setopt($ch, CURLOPT_POST, true);  
     	curl_setopt($ch, CURLOPT_POSTFIELDS, $this->requestBody);  
   
@@ -83,7 +98,7 @@ class RestRequest {
     }  
   
     protected function executePut ($ch){ 
-    	curl_setopt($ch, CURLOPT_POST, 1);  
+    	curl_setopt($ch, CURLOPT_POST, true);  
     	curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "PUT");
     	curl_setopt($ch, CURLOPT_POSTFIELDS, $this->requestBody);  
   
@@ -99,7 +114,7 @@ class RestRequest {
     protected function doExecute (&$ch){  
     	$this->setCurlOpts($ch);
     	$this->responseBody = curl_exec($ch);  
-    	$this->responseInfo  = curl_getinfo($ch); 
+    	$this->responseInfo = curl_getinfo($ch); 
     	curl_close($ch);
     }
   
@@ -108,7 +123,9 @@ class RestRequest {
     	curl_setopt($ch, CURLOPT_URL, $this->url);  
     	curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
     	//curl_setopt($ch, CURLOPT_HEADER, true); //displays header in output.
-    	curl_setopt($ch, CURLOPT_HTTPHEADER, array ('Accept: ' . $this->acceptType, 'Content-Type: application/json'));  
+    	curl_setopt($ch, CURLOPT_HTTPHEADER, array ('Accept: ' . $this->acceptType, $this->contentType, 'X-Atlassian-Token: nocheck'));  
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false); // ignore self signed certs
+        //curl_setopt($ch, CURLOPT_VERBOSE, true); // set to true for CURL debug output
     } 
   
     protected function setAuth (&$ch){

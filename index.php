@@ -28,4 +28,7 @@ $query->project = 'USSF';
 
 $queryIssue = new Jira($config);
 $queryIssue->queryIssue($query);
+
+//$attachment = new Jira($config);
+//$attachment->addAttachment('./someFile.jpg', $project.'-18');
 ?>
