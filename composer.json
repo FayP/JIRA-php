@@ -1,0 +1,8 @@
+{
+    "name": "titosemi/JiraApi",
+    "autoload": {
+        "psr-0": {
+            "titosemi\\JiraApi": "src"
+        }
+    }
+}
