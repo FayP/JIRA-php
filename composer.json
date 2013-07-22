@@ -3,7 +3,7 @@
     "description": "PHP classes for interacting witht the Jira REST API",
     "autoload": {
         "psr-0": {
-            "titosemi\\JiraApi": "src/"
+            "JiraApi": "src/"
         }
     }
 }

@@ -1,6 +1,6 @@
 <?php
 
-namespace titosemi\JiraApi;
+namespace JiraApi;
 
 class Jira
 {
