@@ -1,5 +1,5 @@
 {
-    "name": "titosemi/jira-api",
+    "name": "jira-api",
     "description": "PHP classes for interacting witht the Jira REST API",
     "autoload": {
         "psr-0": {
