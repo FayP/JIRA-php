@@ -108,20 +108,8 @@ class Jira
 
     public function queryIssue($query)
     {
-        function createPairs($obj) {
-            $str = "";
-            foreach ($obj as $key => $value) {
-                if ($key != 'jql') {
-                    $str .= "$key=$value&";
-                } else {
-                    $str .= trim($value, '"\'@') . '&';
-                }
-            }
-            return rtrim($str, '&');
-        }
-        $qs = createPairs($query);
-        $qs = urlencode($qs);
-        $this->request->OpenConnect($this->host . 'search?jql=' . $qs);
+        $query = urlencode($query);
+        $this->request->OpenConnect($this->host . 'search?jql=' . $query);
         $this->request->execute();
         $result = json_decode($this->request->getResponseBody());
         if (isset($result->issues)) {
