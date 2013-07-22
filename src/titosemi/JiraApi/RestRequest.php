@@ -110,7 +110,7 @@ class RestRequest
     {
         $result = $this->getResponseInfo();
 
-        if (isset($result['http_code']) && ($result['http_code'] > 200 && $result['http_code'] < 300)) {
+        if (isset($result['http_code']) && ($result['http_code'] >= 200 && $result['http_code'] < 300)) {
             return true;
         }
 

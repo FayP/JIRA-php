@@ -5,22 +5,20 @@ namespace titosemi\JiraApi;
 class Jira
 {
 
-    protected $config;
-    protected $project;
     protected $host;
 
-    public function __construct(array $config)
+    public function __construct(array $config = array())
     {
         $this->request = new RestRequest();
-        $this->request->username = $config->username;
-        $this->request->password = $config->password;
-        $this->host = 'https://' . $config->host . '/rest/api/2/';
-        $this->config = $config;
+        $this->request->username = (isset($config['username'])) ? $config['username'] : null;
+        $this->request->password = (isset($config['password'])) ? $config['password'] : null;
+        $host = (isset($config['host'])) ? $config['host'] : null; 
+        $this->host = 'https://' . $host . '/rest/api/2/';
     }
 
     public function testLogin()
     {
-        $user = $this->getUser($this->config->username);
+        $user = $this->getUser($this->request->username);
         if (!empty($user) && $this->request->lastRequestStatus()) {
             return true;
         }
