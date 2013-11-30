@@ -12,8 +12,7 @@ class Jira
         $this->request = new RestRequest();
         $this->request->username = (isset($config['username'])) ? $config['username'] : null;
         $this->request->password = (isset($config['password'])) ? $config['password'] : null;
-        $host = (isset($config['host'])) ? $config['host'] : null; 
-        $this->host = 'https://' . $host . '/rest/api/2/';
+        $this->host = (isset($config['host'])) ? $config['host'] : null; 
     }
 
     public function testLogin()
