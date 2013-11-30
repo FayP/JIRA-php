@@ -9,10 +9,36 @@ class Jira
 
     public function __construct(array $config = array())
     {
+        // Check config before do nothing
         $this->request = new RestRequest();
-        $this->request->username = (isset($config['username'])) ? $config['username'] : null;
-        $this->request->password = (isset($config['password'])) ? $config['password'] : null;
-        $this->host = (isset($config['host'])) ? $config['host'] : null; 
+        $this->request->username = (isset($config['username'])) ? trim($config['username']) : null;
+        $this->request->password = (isset($config['password'])) ? trim($config['password']) : null;
+        $this->host = (isset($config['host'])) ? trim($config['host']) : null; 
+        
+        $this->configCheck();
+        $this->host = trim($this->host,"/") . '/'; 
+
+        if( ($last = $this->host[strlen($this->host)-1]) != '/' )
+        {
+            $this->host .= '/';
+        }
+
+    }
+
+    private function configCheck()
+    {
+        if(is_null($this->host) || $this->host == '')
+        {
+            throw new \Exception('Missing or Empty host (url to API) - unable to continue');      
+        }    
+        if(is_null($this->request->username) || $this->request->username == '' )
+        {
+            throw new \Exception('Missing or Empty username - unable to continue');      
+        }    
+        if(is_null($this->request->password) || $this->request->password == '')
+        {
+            throw new \Exception('Missing or Empty password - unable to continue');      
+        }    
     }
 
     public function testLogin()
@@ -175,5 +201,13 @@ class Jira
 
         return $this->request->lastRequestStatus();
     }
+
+    public function getIssue($issueKey)
+    {
+        $this->request->openConnect($this->host . 'issue/' . $issueKey, 'GET');
+        $this->request->execute();
+        $item = json_decode($this->request->getResponseBody());
+
+        return $item;
+    }
 }
-?>
