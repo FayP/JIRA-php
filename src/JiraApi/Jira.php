@@ -1,4 +1,10 @@
 <?php
+/**
+ * JIRA Rest Client
+ *
+ * @author     Original Author https://github.com/FayP / http://faypickering.com
+ * @author     Francisco Mancardi <francisco.mancardi@gmail.com>
+ */
 
 namespace JiraApi;
 
@@ -25,6 +31,9 @@ class Jira
 
     }
 
+    /**
+     *
+     */
     private function configCheck()
     {
         if(is_null($this->host) || $this->host == '')
@@ -41,6 +50,9 @@ class Jira
         }    
     }
 
+    /**
+     *
+     */
     public function testLogin()
     {
         $user = $this->getUser($this->request->username);
@@ -51,6 +63,9 @@ class Jira
         return false;
     }
 
+    /**
+     *
+     */
     public function getUser($username)
     {
         $this->request->openConnect($this->host . 'user/search/?username=' . $username, 'GET');
@@ -60,6 +75,9 @@ class Jira
         return $user;
     }
 
+    /**
+     *
+     */
     public function getStatuses()
     {
         $this->request->openConnect($this->host . 'status', 'GET');
@@ -156,14 +174,46 @@ class Jira
         return false;
     }
 
-    public function createIssue($json)
+    /**
+     *
+     * @param array $issueFields using 'fields' member
+     *
+     * Here's an example:
+     *
+     * $issueFields = array('fields' =>
+     *                       array('project' => array('key' => (string)'ZOFF'),
+     *                             'summary' => 'My First JIRA Issue via REST',
+     *                             'description' => '',
+     *                             'issuetype' => array( 'id' => 1)
+     *                            )
+     *                     );
+     *
+     * For more details about fields:
+     * https://developer.atlassian.com/display/JIRADEV/
+     *       JIRA+REST+API+Example+-+Create+Issue#JIRARESTAPIExample-CreateIssue-Examplesofcreatinganissue
+     *
+     * https://developer.atlassian.com/display/JIRADEV/
+     *       JIRA+REST+API+Example+-+Discovering+meta-data+for+creating+issues
+     *
+     *
+     * @return  object reponse body (ATTENTION: can be null if something wrong has happened) 
+     *          properties: id,key,self
+     *          Example:
+     *          {"id":"12505","key":"ZOFF-186","self":"https://testlink.atlassian.net/rest/api/latest/issue/12505"}
+     *
+     */
+    public function createIssue($issueFields)
     {
-        $this->request->openConnect($this->host . 'issue/', 'POST', $json);
+        $this->request->openConnect($this->host . 'issue/', 'POST', $issueFields);
         $this->request->execute();
 
-        return $this->request->lastRequestStatus();
+        return json_decode($this->request->getResponseBody());
     }
 
+    /**
+     *
+     *
+     */
     public function addAttachment($filename, $issueKey)
     {
         $this->request->openConnect($this->host . 'issue/' . $issueKey . '/attachments', 'POST', null, $filename);
@@ -172,9 +222,14 @@ class Jira
         return $this->request->lastRequestStatus();
     }
 
-    public function updateIssue($json, $issueKey)
+    /**
+     *
+     * @param array $issueFields using 'fields' member
+     *
+     */
+    public function updateIssue($issueFields, $issueKey)
     {
-        $this->request->openConnect($this->host . 'issue/' . $issueKey, 'PUT', $json);
+        $this->request->openConnect($this->host . 'issue/' . $issueKey, 'PUT', $issueFields);
         $this->request->execute();
 
         return $this->request->lastRequestStatus();
