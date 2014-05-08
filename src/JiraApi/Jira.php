@@ -106,10 +106,30 @@ class Jira
         return false;
     }
 
-    public function queryIssue($query)
+    /**
+     * Execute the actual JQL query against the JIRA API.
+     *
+     * The maxResults is needed, otherwise JIRA only returns the default page size (50).
+     * Here in the wrapper we default the maxResults to 500 to get much more results.
+     *
+     * @link https://developer.atlassian.com/display/JIRADEV/JIRA+REST+API+Example+-+Query+issues
+     *
+     * @param string $query      The JQL query
+     * @param string $fields     A filter of comma separated fields, or null, in case we want all fields
+     * @param int    $maxResults Number of returned results (by default 500)
+     * @return mixed False in case of error, array of resultsets otherwise
+     */
+    public function queryIssue($query, $fields = null, $maxResults = 500)
     {
         $query = urlencode($query);
-        $this->request->OpenConnect($this->host . 'search?jql=' . $query);
+        $url   = $this->host . 'search?jql=' . $query;
+        if (isset($fields)) {
+            $url.= '&fields=' . $fields;
+        }
+        if (isset($maxResults)) {
+            $url.= '&maxResults=' . $maxResults;
+        }
+        $this->request->OpenConnect($url);
         $this->request->execute();
         $result = json_decode($this->request->getResponseBody());
         if (isset($result->issues)) {
