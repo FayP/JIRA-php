@@ -184,5 +184,26 @@ class Jira
 
         return $this->request->lastRequestStatus();
     }
+
+    public function getVersions($project)
+    {
+        $this->request->openConnect($this->host . 'project/' . $project . '/versions');
+        $this->request->execute();
+
+        $result = json_decode($this->request->getResponseBody());
+        if (is_array($result)) {
+            return $result;
+        }
+
+        return false;
+    }
+
+    public function createVersion($json)
+    {
+        $this->request->openConnect($this->host . 'version/', 'POST', $json);
+        $this->request->execute();
+
+        return $this->request->lastRequestStatus();
+    }
 }
 ?>
