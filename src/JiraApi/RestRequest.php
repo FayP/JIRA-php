@@ -159,6 +159,7 @@ class RestRequest
         curl_setopt($ch, CURLOPT_TIMEOUT, 60);
         curl_setopt($ch, CURLOPT_URL, $this->url);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_ENCODING ,"UTF-8");
         //curl_setopt($ch, CURLOPT_HEADER, true); //displays header in output.
         curl_setopt(
             $ch,
