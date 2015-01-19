@@ -12,7 +12,7 @@ class Jira
         $this->request = new RestRequest();
         $this->request->username = (isset($config['username'])) ? $config['username'] : null;
         $this->request->password = (isset($config['password'])) ? $config['password'] : null;
-        $host = (isset($config['host'])) ? $config['host'] : null; 
+        $host = (isset($config['host'])) ? $config['host'] : null;
         $this->host = 'https://' . $host . '/rest/api/2/';
     }
 
@@ -201,6 +201,27 @@ class Jira
     public function createVersion($json)
     {
         $this->request->openConnect($this->host . 'version/', 'POST', $json);
+        $this->request->execute();
+
+        return $this->request->lastRequestStatus();
+    }
+
+    public function getComponents($project)
+    {
+        $this->request->openConnect($this->host . 'project/' . $project . '/components');
+        $this->request->execute();
+
+        $result = json_decode($this->request->getResponseBody());
+        if (is_array($result)) {
+            return $result;
+        }
+
+        return false;
+    }
+
+    public function createComponent($json)
+    {
+        $this->request->openConnect($this->host . 'component/', 'POST', $json);
         $this->request->execute();
 
         return $this->request->lastRequestStatus();
