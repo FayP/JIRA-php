@@ -15,6 +15,7 @@ class RestRequest
     protected $acceptType;
     protected $responseBody;
     protected $responseInfo;
+    protected $numberOfRequests = 0;
 
     public function openConnect($url = null, $verb = 'GET', $requestBody = null, $filename = null)
     {
@@ -70,6 +71,8 @@ class RestRequest
             curl_close($ch);
             throw $e;
         }
+
+        $this->numberOfRequests++;
     }
 
     public function buildPostBody($data = null)
@@ -115,6 +118,11 @@ class RestRequest
         }
 
         return false;
+    }
+
+    public function getNumberOfRequests()
+    {
+        return $this->numberOfRequests;
     }
 
     protected function executeGet($ch)
