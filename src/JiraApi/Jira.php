@@ -5,11 +5,29 @@ namespace JiraApi;
 class Jira
 {
 
+    /**
+     * @var string
+     */
     protected $host;
 
-    public function __construct(array $config = array())
+    /**
+     * @var array
+     */
+    protected $config;
+
+    /**
+     * @var RestRequest
+     */
+    protected $request;
+
+    public function __construct()
     {
         $this->request = new RestRequest();
+
+    }
+
+    public function setConfig(array $config = array())
+    {
         $this->request->username = (isset($config['username'])) ? $config['username'] : null;
         $this->request->password = (isset($config['password'])) ? $config['password'] : null;
         $host = (isset($config['host'])) ? $config['host'] : null;
@@ -24,6 +42,11 @@ class Jira
         }
 
         return false;
+    }
+
+    public function getRequest()
+    {
+        return $this->request;
     }
 
     public function getUser($username)
