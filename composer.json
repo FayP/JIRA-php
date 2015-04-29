@@ -2,7 +2,7 @@
     "name": "jira-api",
     "description": "PHP classes for interacting witht the Jira REST API",
     "keywords": ["Jira", "api"],
-    "version": "1.0",
+    "version": "1.1",
     "type": "library",
     "autoload": {
         "psr-0": {
