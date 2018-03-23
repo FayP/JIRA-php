@@ -1,5 +1,7 @@
 <?php
 
+namespace JiraApi;
+
 class Jira
 {
 
