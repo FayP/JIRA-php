@@ -12,7 +12,7 @@ class Jira
         $this->request = new RestRequest();
         $this->request->username = (isset($config['username'])) ? $config['username'] : null;
         $this->request->password = (isset($config['password'])) ? $config['password'] : null;
-        $host = (isset($config['host'])) ? $config['host'] : null; 
+        $host = (isset($config['host'])) ? $config['host'] : null;
         $this->host = 'https://' . $host . '/rest/api/2/';
     }
 
@@ -21,6 +21,54 @@ class Jira
         $user = $this->getUser($this->request->username);
         if (!empty($user) && $this->request->lastRequestStatus()) {
             return true;
+        }
+
+        return false;
+    }
+
+    public function getTicket($issueKey)
+    {
+        $this->request->openConnect($this->host . 'issue/' . $issueKey . '/', 'GET');
+        $this->request->execute();
+        $result = json_decode($this->request->getResponseBody());
+        if (isset($result)) {
+            return $result;
+        }
+
+        return false;
+    }
+
+    public function getReporter($issueKey)
+    {
+        $this->request->openConnect($this->host . 'issue/' . $issueKey . '/', 'GET');
+        $this->request->execute();
+        $result = json_decode($this->request->getResponseBody());
+        if (isset($result->fields->reporter->displayName)) {
+            return $result->fields->reporter->displayName;
+        }
+
+        return false;
+    }
+
+    public function getEpic($issueKey)
+    {
+        $this->request->openConnect($this->host . 'issue/' . $issueKey . '/', 'GET');
+        $this->request->execute();
+        $result = json_decode($this->request->getResponseBody());
+        if (isset($result->fields->customfield_10361)) { // could be different in other environments
+            return $result->fields->customfield_10361;
+        }
+
+        return false;
+    }
+
+    public function getEpicName($issueKey)
+    {
+        $this->request->openConnect($this->host . 'issue/' . $issueKey . '/', 'GET');
+        $this->request->execute();
+        $result = json_decode($this->request->getResponseBody());
+        if (isset($result->fields->customfield_10362)) { // could be different in other environments
+            return $result->fields->customfield_10362;
         }
 
         return false;
