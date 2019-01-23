@@ -250,6 +250,18 @@ class Jira
         return $this->request->lastRequestStatus();
     }
 
+    public function updateFilter($json, $filterId)
+    {
+        $filterId = intval($filterId);
+        if ($data = json_decode($json)) {
+            $this->request->openConnect($this->host . 'filter/' . $filterId . '?expand', 'PUT', $data);
+            $this->request->execute();
+
+            return $this->request->lastRequestStatus();
+        }
+        return false;
+    }
+
     /**
      * @param string $responseBody JSON with response body
      * @return mixed Decoded JSON
