@@ -53,7 +53,7 @@ class Jira
     {
         $this->request->openConnect($this->host . 'user/search/?username=' . $username, 'GET');
         $this->request->execute();
-        $user = json_decode($this->request->getResponseBody());
+        $user = $this->getDecodedApiResponse($this->request->getResponseBody());
 
         return $user;
     }
@@ -62,7 +62,7 @@ class Jira
     {
         $this->request->openConnect($this->host . 'status', 'GET');
         $this->request->execute();
-        $statuses = json_decode($this->request->getResponseBody());
+        $statuses = $this->getDecodedApiResponse($this->request->getResponseBody());
         $returnStatuses = array();
         foreach ($statuses as $status) {
             $returnStatuses[$status->id] = $status->name;
@@ -75,7 +75,7 @@ class Jira
     {
         $this->request->openConnect($this->host . 'issue/' . $issueKey . '/transitions', 'GET');
         $this->request->execute();
-        if ($result = json_decode($this->request->getResponseBody())) {
+        if ($result = $this->getDecodedApiResponse($this->request->getResponseBody())) {
             $returnTransitions = array();
             foreach ($result->transitions as $transition) {
                 $returnTransitions[$transition->id] = $transition->name;
@@ -90,7 +90,7 @@ class Jira
     {
         $this->request->openConnect($this->host . 'issue/' . $issueKey . '/?expand=changelog', 'GET');
         $this->request->execute();
-        if ($result = json_decode($this->request->getResponseBody())) {
+        if ($result = $this->getDecodedApiResponse($this->request->getResponseBody())) {
             if (!isset($result->changelog)) {
                 return false;
             }
@@ -121,7 +121,7 @@ class Jira
     {
         $this->request->openConnect($this->host . 'issue/' . $issueKey . '/comment?expand', 'GET');
         $this->request->execute();
-        $result = json_decode($this->request->getResponseBody());
+        $result = $this->getDecodedApiResponse($this->request->getResponseBody());
         if (isset($result->comments)) {
             return $result->comments;
         }
@@ -154,7 +154,7 @@ class Jira
         }
         $this->request->OpenConnect($url);
         $this->request->execute();
-        $result = json_decode($this->request->getResponseBody());
+        $result = $this->getDecodedApiResponse($this->request->getResponseBody());
         if (isset($result->issues)) {
             return $result->issues;
         }
@@ -213,7 +213,7 @@ class Jira
         $this->request->openConnect($this->host . 'project/' . $project . '/versions');
         $this->request->execute();
 
-        $result = json_decode($this->request->getResponseBody());
+        $result = $this->getDecodedApiResponse($this->request->getResponseBody());
         if (is_array($result)) {
             return $result;
         }
@@ -234,7 +234,7 @@ class Jira
         $this->request->openConnect($this->host . 'project/' . $project . '/components');
         $this->request->execute();
 
-        $result = json_decode($this->request->getResponseBody());
+        $result = $this->getDecodedApiResponse($this->request->getResponseBody());
         if (is_array($result)) {
             return $result;
         }
@@ -248,6 +248,23 @@ class Jira
         $this->request->execute();
 
         return $this->request->lastRequestStatus();
+    }
+
+    /**
+     * @param string $responseBody JSON with response body
+     * @return mixed Decoded JSON
+     */
+    private function getDecodedApiResponse($responseBody)
+    {
+        /**
+         * workaround to json_decode(): integer overflow detected error
+         * @see https://stackoverflow.com/questions/19520487/json-bigint-as-string-removed-in-php-5-5/27909889
+         */
+        $maxIntLength = strlen((string) PHP_INT_MAX) - 1;
+        $safeJson = preg_replace('/:\s*(-?\d{'.$maxIntLength.',})/', ': "$1"', $responseBody);
+        $result = json_decode($safeJson);
+
+        return $result;
     }
 }
 ?>
