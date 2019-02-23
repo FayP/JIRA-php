@@ -5,14 +5,32 @@ namespace JiraApi;
 class Jira
 {
 
+    /**
+     * @var string
+     */
     protected $host;
 
-    public function __construct(array $config = array())
+    /**
+     * @var array
+     */
+    protected $config;
+
+    /**
+     * @var RestRequest
+     */
+    protected $request;
+
+    public function __construct()
     {
         $this->request = new RestRequest();
+
+    }
+
+    public function setConfig(array $config = array())
+    {
         $this->request->username = (isset($config['username'])) ? $config['username'] : null;
         $this->request->password = (isset($config['password'])) ? $config['password'] : null;
-        $host = (isset($config['host'])) ? $config['host'] : null; 
+        $host = (isset($config['host'])) ? $config['host'] : null;
         $this->host = 'https://' . $host . '/rest/api/2/';
     }
 
@@ -26,11 +44,16 @@ class Jira
         return false;
     }
 
+    public function getRequest()
+    {
+        return $this->request;
+    }
+
     public function getUser($username)
     {
         $this->request->openConnect($this->host . 'user/search/?username=' . $username, 'GET');
         $this->request->execute();
-        $user = json_decode($this->request->getResponseBody());
+        $user = $this->getDecodedApiResponse($this->request->getResponseBody());
 
         return $user;
     }
@@ -39,7 +62,7 @@ class Jira
     {
         $this->request->openConnect($this->host . 'status', 'GET');
         $this->request->execute();
-        $statuses = json_decode($this->request->getResponseBody());
+        $statuses = $this->getDecodedApiResponse($this->request->getResponseBody());
         $returnStatuses = array();
         foreach ($statuses as $status) {
             $returnStatuses[$status->id] = $status->name;
@@ -52,7 +75,7 @@ class Jira
     {
         $this->request->openConnect($this->host . 'issue/' . $issueKey . '/transitions', 'GET');
         $this->request->execute();
-        if ($result = json_decode($this->request->getResponseBody())) {
+        if ($result = $this->getDecodedApiResponse($this->request->getResponseBody())) {
             $returnTransitions = array();
             foreach ($result->transitions as $transition) {
                 $returnTransitions[$transition->id] = $transition->name;
@@ -67,7 +90,7 @@ class Jira
     {
         $this->request->openConnect($this->host . 'issue/' . $issueKey . '/?expand=changelog', 'GET');
         $this->request->execute();
-        if ($result = json_decode($this->request->getResponseBody())) {
+        if ($result = $this->getDecodedApiResponse($this->request->getResponseBody())) {
             if (!isset($result->changelog)) {
                 return false;
             }
@@ -98,7 +121,7 @@ class Jira
     {
         $this->request->openConnect($this->host . 'issue/' . $issueKey . '/comment?expand', 'GET');
         $this->request->execute();
-        $result = json_decode($this->request->getResponseBody());
+        $result = $this->getDecodedApiResponse($this->request->getResponseBody());
         if (isset($result->comments)) {
             return $result->comments;
         }
@@ -106,24 +129,32 @@ class Jira
         return false;
     }
 
-    public function queryIssue($query)
+    /**
+     * Execute the actual JQL query against the JIRA API.
+     *
+     * The maxResults is needed, otherwise JIRA only returns the default page size (50).
+     * Here in the wrapper we default the maxResults to 500 to get much more results.
+     *
+     * @link https://developer.atlassian.com/display/JIRADEV/JIRA+REST+API+Example+-+Query+issues
+     *
+     * @param string $query      The JQL query
+     * @param string $fields     A filter of comma separated fields, or null, in case we want all fields
+     * @param int    $maxResults Number of returned results (by default 500)
+     * @return mixed False in case of error, array of resultsets otherwise
+     */
+    public function queryIssue($query, $fields = null, $maxResults = 500)
     {
-        function createPairs($obj) {
-            $str = "";
-            foreach ($obj as $key => $value) {
-                if ($key != 'jql') {
-                    $str .= "$key=$value&";
-                } else {
-                    $str .= trim($value, '"\'@') . '&';
-                }
-            }
-            return rtrim($str, '&');
+        $query = urlencode($query);
+        $url   = $this->host . 'search?jql=' . $query;
+        if (isset($fields)) {
+            $url.= '&fields=' . $fields;
         }
-        $qs = createPairs($query);
-        $qs = urlencode($qs);
-        $this->request->OpenConnect($this->host . 'search?jql=' . $qs);
+        if (isset($maxResults)) {
+            $url.= '&maxResults=' . $maxResults;
+        }
+        $this->request->OpenConnect($url);
         $this->request->execute();
-        $result = json_decode($this->request->getResponseBody());
+        $result = $this->getDecodedApiResponse($this->request->getResponseBody());
         if (isset($result->issues)) {
             return $result->issues;
         }
@@ -175,6 +206,77 @@ class Jira
         $this->request->execute();
 
         return $this->request->lastRequestStatus();
+    }
+
+    public function getVersions($project)
+    {
+        $this->request->openConnect($this->host . 'project/' . $project . '/versions');
+        $this->request->execute();
+
+        $result = $this->getDecodedApiResponse($this->request->getResponseBody());
+        if (is_array($result)) {
+            return $result;
+        }
+
+        return false;
+    }
+
+    public function createVersion($json)
+    {
+        $this->request->openConnect($this->host . 'version/', 'POST', $json);
+        $this->request->execute();
+
+        return $this->request->lastRequestStatus();
+    }
+
+    public function getComponents($project)
+    {
+        $this->request->openConnect($this->host . 'project/' . $project . '/components');
+        $this->request->execute();
+
+        $result = $this->getDecodedApiResponse($this->request->getResponseBody());
+        if (is_array($result)) {
+            return $result;
+        }
+
+        return false;
+    }
+
+    public function createComponent($json)
+    {
+        $this->request->openConnect($this->host . 'component/', 'POST', $json);
+        $this->request->execute();
+
+        return $this->request->lastRequestStatus();
+    }
+
+    public function updateFilter($json, $filterId)
+    {
+        $filterId = intval($filterId);
+        if ($data = json_decode($json)) {
+            $this->request->openConnect($this->host . 'filter/' . $filterId . '?expand', 'PUT', $data);
+            $this->request->execute();
+
+            return $this->request->lastRequestStatus();
+        }
+        return false;
+    }
+
+    /**
+     * @param string $responseBody JSON with response body
+     * @return mixed Decoded JSON
+     */
+    private function getDecodedApiResponse($responseBody)
+    {
+        /**
+         * workaround to json_decode(): integer overflow detected error
+         * @see https://stackoverflow.com/questions/19520487/json-bigint-as-string-removed-in-php-5-5/27909889
+         */
+        $maxIntLength = strlen((string) PHP_INT_MAX) - 1;
+        $safeJson = preg_replace('/:\s*(-?\d{'.$maxIntLength.',})/', ': "$1"', $responseBody);
+        $result = json_decode($safeJson);
+
+        return $result;
     }
 }
 ?>

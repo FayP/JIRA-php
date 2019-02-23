@@ -15,6 +15,7 @@ class RestRequest
     protected $acceptType;
     protected $responseBody;
     protected $responseInfo;
+    protected $numberOfRequests = 0;
 
     public function openConnect($url = null, $verb = 'GET', $requestBody = null, $filename = null)
     {
@@ -70,6 +71,8 @@ class RestRequest
             curl_close($ch);
             throw $e;
         }
+
+        $this->numberOfRequests++;
     }
 
     public function buildPostBody($data = null)
@@ -117,6 +120,11 @@ class RestRequest
         return false;
     }
 
+    public function getNumberOfRequests()
+    {
+        return $this->numberOfRequests;
+    }
+
     protected function executeGet($ch)
     {
         $this->doExecute($ch);
@@ -159,6 +167,7 @@ class RestRequest
         curl_setopt($ch, CURLOPT_TIMEOUT, 60);
         curl_setopt($ch, CURLOPT_URL, $this->url);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_ENCODING ,"UTF-8");
         //curl_setopt($ch, CURLOPT_HEADER, true); //displays header in output.
         curl_setopt(
             $ch,
